@@ -1,0 +1,320 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!-- Add this line for jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.6/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.6/dist/sweetalert2.all.min.js"></script>
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link href="{% static 'ajax_datatable/css/style.css' %}" rel="stylesheet" />
+    <link href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <title>All</title>
+</head>
+
+<body>
+    <div style="display: flex; justify-content: center; align-items: center;">
+        <a href="{% url 'show' %}" class="logo d-flex text-center" style="text-decoration: none;">
+            <h3>Back to home</h3>
+        </a>
+    </div>
+
+
+    <!-- djang-ajax-datatable -->
+    <div class="container">
+        <div class="container bordered d-block w-50 bg-secondary my-4">
+            <h3 class="text-center my-4">Blogs</h3>
+        </div>
+        <table class="table table-bordered table-striped" id="adatatable"></table>
+    </div>
+    <!-- end ajax-table -->
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editmodal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+    
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit data</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+    
+                <div class="modal-body">
+                    <form action="" method="post" id="editform">
+                        {% csrf_token %}
+                        <input type="text" name='hidden' id="hiddenid">
+                        {{forms.as_p}}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            <input type="submit" class="btn btn-primary text-center my-2" id="editsave" value="Submit" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Edit Modal -->
+
+    <!-- Show Modal -->
+    <div class="modal" id="showmodal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">Show data</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body text-center">
+                    <div class="">
+                        <hr>
+                        <img id="modalimage" src="" alt="Blog Photo" style="max-width: 75%;">
+                        <hr>
+                        <h4><span class="display-4" id="ti"></span></h4>
+                        <hr>
+                        <h4><strong>Description:</strong></h4>
+                        <span id="d"></span>
+                        <h4></h4>
+                        <div class="box" style="border: 1px solid black; width:75%; margin : auto;">
+                            <h4><strong>Category:</strong> <span id="c"></span></h4>
+                            <h4><strong>Created at:</strong> <span id="ca"></span></h4>
+                            <h4><strong>Updated at:</strong> <span id="ua"></span></h4>
+                            <h4><strong>Published:</strong> <span id="p"></span></h4>
+                            <h4><strong>author:</strong> <span id="a"></span></h4>
+                            <h4><strong>Tags:</strong> <span id="t"></span></h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'show.html' %}
+    <!-- End show modal -->
+    <!-- Scripts -->
+    <script type="text/javascript" src="{% static 'ajax_datatable/js/utils.js' %}"></script>
+    <script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $.ajaxSetup({
+                headers: { 'X-CSRFToken': $("[name=csrfmiddlewaretoken]").val() },
+            });
+
+            $('#adatatable').on('draw.dt', function () {
+                $('#adatatable tbody tr').each(function () {
+                    const ImageCell = $(this).find('td:eq(0)');
+                    const ImageURL = ImageCell.text();
+
+                    if (ImageURL) {
+                        const fullImageURL = "{% get_media_prefix %}" + ImageURL;
+                        const imageHTML = `<img src="${fullImageURL}" alt="Profile Image" width="50">`;
+                        ImageCell.html(imageHTML);
+                    }
+                });
+            });
+
+            AjaxDatatableViewUtils.initialize_table(
+                $('#adatatable'),
+                "{% url 'ajax_table' %}",
+                {
+                    processing: false,
+                    autoWidth: true,
+                    full_row_select: true,
+                    scrollX: false,
+                    serverSide: true,
+                    stripe: true,
+                    order: [[1, 'asc']]
+                },
+                {
+                    'assigned_user': "{{request.user}}"
+                }
+            );
+
+
+
+            //EDIT
+            $('#editform').submit(function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Do you want to submit the form?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let forms = $(this)[0];
+                        let formdata = new FormData(forms);
+                        let id = $('#hiddenid').val();
+
+                        $.ajax({
+                            url: "{% url 'save' %}",
+                            method: 'POST',
+                            data: formdata,
+                            dataType: 'json',
+                            processData: false,
+                            contentType: false,
+                            success: function (response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Updated Submitted',
+                                    text: 'The Update form has been submitted successfully.',
+                                });
+                                $("#adatatype").DataTable().ajax.reload();
+                                $('#editmodal').modal('hide');
+                            },
+                            error: function (response) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Invalid Fields',
+                                    text: 'Please make sure to fill in all required fields correctly.',
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+        });
+
+        function edit(url) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (data) {
+                    $('#userid').val(data.id);
+                    $('#title').val(data.title);
+                    $('#description').val(data.description);
+                    $('#category').val(data.category);
+                    $('#published').val(data.published);
+                    $('#author').val(data.author);
+                    $('#tags').val(data.tags);
+                    $('#editmodal').modal('show');
+                },
+                error: function () {
+                    console.log('Error occurred during data retrieval.');
+                }
+            });
+        }
+        
+        function deletes(url) {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            //alert("Delete");
+            Swal.fire({
+                title: 'Delete Record',
+                text: 'Are you sure you want to delete this record?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "DELETE",
+                        url: url,
+                        headers: { "X-CSRFToken": csrfToken },
+                        success: function () {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: 'The record has been deleted.',
+                                icon: 'success'
+                            }).then(() => {
+                                $('#adatatable').DataTable().ajax.reload();
+                            });
+                        },
+                        error: function () {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Something went wrong. Please try again later.',
+                                icon: 'error'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function edit(url) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (data) {
+                    $('#editform #hiddenid').val(data.id);
+                    $('#editform #title').val(data.title);
+                    $('#editform #description').val(data.description);
+                    $('#editform #category option').each(function () {
+                        if ($(this).text() === data.category) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+                    $('#editform #author option').each(function () {
+                        if ($(this).text() === data.author) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+                    $('#editform #published').prop('checked', data.published);
+                    $('#editform #tags').val(data.tags);
+                    $('#adatatable').DataTable().ajax.reload();
+                    $('#editmodal').modal('show');
+                },
+                error: function () {
+                    console.log('Error occurred during data retrieval.');
+                }
+            });
+        }
+        function show(url1) {
+            //alert("Show Modal");
+            $.ajax({
+                url: url1,
+                method: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    var dataData = response.data_data;
+                    //alert(dataData.first_name);
+                    $('#modalimage').attr('src', dataData.image);  // Assuming 'data_photo' is the URL to the image
+                    $('#ti').text(dataData.title);
+                    $('#d').text(dataData.description);
+                    $('#c').text(dataData.category);
+                    var createdAt = new Date(dataData.created_at);
+                    var updatedAt = new Date(dataData.updated_at);
+                    $('#ca').text(createdAt.toLocaleString());
+                    $('#ua').text(updatedAt.toLocaleString());
+                    $('#p').text(dataData.published);
+                    $('#a').text(dataData.author);
+                    $('#t').text(dataData.tags);
+
+                    // Show the modal
+                    $('#showmodal').modal('show');
+                },
+                error: function (error) {
+                    console.error('Error fetching data data:', error);
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>
